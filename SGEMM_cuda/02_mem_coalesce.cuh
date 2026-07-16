@@ -21,7 +21,15 @@ __global__ void sgemm_02(int M,
 // meaning we'll have threadIdx.y=0 and threadIdx.z=0 for all launched threads
 // the reason is to easily map between warps and data they are accessing so we can assure coalescing
 // atleast that's my current mental model
+// very neat , looking at the block as 1D array is more helpful if you think about coalescing
+// templating makes the kernel even more extensible, (extendible? , idk)
 const uint  x = blockIdx.x * BLOCKSIZE + threadIdx.x / BLOCKSIZE;
 const uint  y = blockIdx.y * BLOCKSIZE + threadIdx.x % BLOCKSIZE;
-
+if(x<M && y<N){
+    float acc = 0.0f;
+    for(int i=0;i<K;++i){
+        acc+=A[x*k+i]*B[i*N+y];
+    }
+    C[x*N+y]=prod_scale*acc+sum_scale*C[x*N+y];
+}
 }
