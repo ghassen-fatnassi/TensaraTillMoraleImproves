@@ -44,7 +44,7 @@ for(int Blk_idx=0; Blk_idx<K; Blk_idx+=BLOCKSIZE){
     __syncthreads();
     A+=BLOCKSIZE;//this is necessary, it moves the A pointer to cover the block and eveything down/right
     B+=BLOCKSIZE*N;
-    // the latest sync threads isn't to avoid data race, it's to avoid some threads overwriting the shmem while some threads are still doing acc
+    // the latest sync threads is to avoid data race,i.e some threads overwriting the shmem while some threads are still doing acc
     //basically loop in lockstep (since any extra iteration from a thread will overwrite a shmem that another thread might be using when doing the inner loop)
 }
 C[threadx*N+thready]=prod_scale*acc+sum_scale*C[threadx*N+thready];
