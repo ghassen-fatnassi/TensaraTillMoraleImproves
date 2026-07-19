@@ -16,30 +16,37 @@ __global__ void sgemm_03(int M,
                          const float *B,
                          float *C) {
 
+//coords of block in C that we will be filling, thinking block wise helps easethe problem    
 const uint cRow = blockIdx.x;
 const uint cCol = blockIdx.y;
 
 __shared__ float shmemA[BLOCKSIZE * BLOCKSIZE];
 __shared__ float shmemB[BLOCKSIZE * BLOCKSIZE];
+
+//we are using 1D blocks , meaning threadIdx has only x , to assure we can see the warps that are next to each other and still assure coalescing
 const uint threadx = threadIdx.x / BLOCKSIZE;
 const uint thready = threadIdx.x % BLOCKSIZE;
 
-A += cRow * BLOCKSIZE * K;                    
+//look at it 1D it's easy
+A += cRow * BLOCKSIZE * K;                     
 B += cCol * BLOCKSIZE;                        
 C += cRow * BLOCKSIZE * N + cCol * BLOCKSIZE;
 
 for(int Blk_idx=0; Blk_idx<K; Blk_idx+=BLOCKSIZE){
 
-    shmemA[cRow*BLOCKSIZE+cCol]=A[threadx*BLOCKSIZE+thready];
-    shmemB[cRow*BLOCKSIZE+cCol]=B[threadx*BLOCKSIZE+thready];
+    shmemA[threadx*BLOCKSIZE+thready]=A[threadx*K+thready];
+    shmemB[threadx*BLOCKSIZE+thready]=B[threadx*N+thready];
     
-    __syncthreads();
+    __syncthreads(); //syncing to assure no WAR (write after read) happens (thread writing to shmem before the acc op reads from it)
     for(int i=0;i<BLOCKSIZE;++i){
         acc+=shmemA[x*K+y]*shmemB[X*N+y];
     }
     __syncthreads();
-    // the latest sync threads isn't to avoid data race, it's to avoid some threads overwriting the cache while some threads are still doing acc
+    A+=BLOCKSIZE;//this is necessary, it moves the A pointer to cover the block and eveything down/right
+    B+=BLOCKSIZE*N;
+    // the latest sync threads isn't to avoid data race, it's to avoid some threads overwriting the shmem while some threads are still doing acc
+    //basically loop in lockstep (since any extra iteration from a thread will overwrite a shmem that another thread might be using when doing the inner loop)
 }
-C[someindex]=prod_scale*acc+sum_scale*C[someindex];
+C[threadx*N+thready]=prod_scale*acc+sum_scale*C[threadx*N+thready];
 
 }
