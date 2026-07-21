@@ -42,7 +42,7 @@ for(int Blk_idx=0; Blk_idx<K; Blk_idx+=BLOCKSIZE){
         acc+=shmemA[x*K+y]*shmemB[X*N+y];
     }
     __syncthreads();
-    A+=BLOCKSIZE;//this is necessary, it moves the A pointer to cover the block and eveything down/right
+    A+=BLOCKSIZE;//this advances the blocks that are iterating in A and B , nothing changes in C since we are accumulating there
     B+=BLOCKSIZE*N;
     // the latest sync threads is to avoid data race,i.e some threads overwriting the shmem while some threads are still doing acc
     //basically loop in lockstep (since any extra iteration from a thread will overwrite a shmem that another thread might be using when doing the inner loop)

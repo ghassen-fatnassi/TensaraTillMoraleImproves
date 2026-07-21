@@ -21,11 +21,31 @@ __global__ void sgemm_04(int M,
                          float *C) {
 
 //keep a place where u are going to accumulate the elements
+// we'll keep a tile_result (which is basically per thread result, thread takescare of a 2D tile here)
+
+const uint cRow = blockIdx.x;
+const uint cCol = blockIdx.y;
+const uint threadx = threadIdx.x / BLOCKSIZE;
+const uint thready = threadIdx.x % BLOCKSIZE;
+
+//look at it 1D it's easy
+A += cRow * BLOCKSIZE * K;                     
+B += cCol * BLOCKSIZE;                        
+C += cRow * BLOCKSIZE * N + cCol * BLOCKSIZE;
+
 //init SMEM of A and B
+__shared__ float shmemA[BM*BK];
+__shared__ float shmemA[BK*BN];//keep row-major
+
 //loop over BK
+    //even the shmem populating needs to happen in a loop
+    shmemA[]=A[];
+    shmemB[]=B[];
+    __syncthreads(); // the usual
     //populate SMEM
     //loop over TM
         //loop over TN
             //accumulate here
+    __syncthreads();
 //return result to here
 }
