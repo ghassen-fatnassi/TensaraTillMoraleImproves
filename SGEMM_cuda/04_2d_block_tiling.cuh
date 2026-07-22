@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdio>
 #include <cstdlib>
-
+//this kernel is peak,tiling as an idea is obvious from a first read ,but 2ndand 3rd read tell you how much u didn't know
 #include <cublas_v2.h>
 #include <cuda_runtime.h>
 
@@ -31,13 +31,14 @@ float reg_A[TM]={0.0};
 float reg_B[TN]={0.0};
 
 
-const uint cRow = blockIdx.x;
-const uint cCol = blockIdx.y;
+const uint cRow = blockIdx.y;
+const uint cCol = blockIdx.x;
 
 //coords of a thread that's responsible one 2D tile of the current block
-const uint threadx = threadIdx.x / (BN/TN);
-const uint thready = threadIdx.x % (BN/TN);
+const uint threadCol = threadIdx.x / (BN/TN);
+const uint threadRow = threadIdx.x % (BN/TN);
 
+const uint threads_per_block= (BM*BN)/(TM*TN);//easy to infer
 //look at it 1D it's easy
 //these pointers are pointing to where the work will start to populate the results of the current C block
 A += cRow * BM * K;                     
@@ -48,14 +49,21 @@ C += cRow * BM * N + cCol * BN;
 __shared__ float shmemA[BM*BK];
 __shared__ float shmemB[BK*BN];//keep row-major
 
+
+//these indices are the whole game , pay attention if you are reading my repo
+
+
 //loop over BK
-for (blk_idx=0;blk_idx<=(K/BK);blk_idx++){
+for (blk_idx=0; blk_idx<=(K/BK); blk_idx++){
     //even the shmem populating needs to happen in a loop
-    //theloop since eachthread is responsible fora 2D tile so each thread is also responsible for loaidng thatpart
-    for(int i=0;i<=TM)
-    shmemA[]=A[];
-    shmemB[]=B[];
+    //the loop since eachthread is responsible for a 2D tile so each thread is also responsible for loaidng thatpart
+    for(int i=0;i<TM;++i){
+        shmemA[ threadIdx.x % BK ]=A[]
+    }
     __syncthreads(); // the usual
+    A+=BK;
+    B+=BK*N;
+    //we didn't shit on coalescing since everything is 1D
     //loop over TM
         //loop over TN
             //accumulate here
