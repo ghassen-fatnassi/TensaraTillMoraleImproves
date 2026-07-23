@@ -22,7 +22,7 @@ __global__ void sgemm_04(int M,
                          const float *B,
                          float *C) {
 
-    float reg_tile_result[TM][TN]={0.0};
+    float reg_tile_result[TM*TN]={0.0};
     float reg_A[TM]={0.0};
     float reg_B[TN]={0.0};
 
@@ -81,17 +81,18 @@ __global__ void sgemm_04(int M,
             }
             //2 loops since this is outer product
             //this is the heart of reducing the number of loads from SMEM ( which caused the MIO throttle)
-            for(){
-                for(){
-                    reg_tile_result[]=reg_A[]*reg_B[];
+            for(uint m=0;k<TM;++m){
+                for(uint n=0;l<TN;++n){
+                    reg_tile_result[m*TN+n]=reg_A[m]*reg_B[n];
                 }
             }
         }
         __syncthreads();
     }
-    for(){
-        for(){
-            C[]=prod_scale*reg_tile_result[]+sum_scale*C[];
+    //just remap the results of registers to the full thing now
+    for(uint m=0;m<TM;++m){
+        for(uint n=0;n<TN;++n){
+            C[(threadRow*TM+m)*N+threadCol*TN+n]=prod_scale*reg_tile_result[m*TN+n]+sum_scale*C[(threadRow*TM+m)*N+threadCol*TN+n];
         }
     }
 }
