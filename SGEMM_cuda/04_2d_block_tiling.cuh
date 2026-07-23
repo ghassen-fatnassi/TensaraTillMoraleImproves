@@ -72,12 +72,12 @@ __global__ void sgemm_04(int M,
         // we are doing matmul between 2 small tiles: TM,BK and BK,TN , in our case they are all the same value
         // let's call them just n,n * n,n meaning o(n^3)
         // outer product being o(n²)(the 2 nexted inner loops) then we need another outer loop of accumulation to match the complexity
-        for(int i=0;i<BK;++i){
-            for(j=0;j<TM;++j){
-                reg_A[j]=shmemA[];
+        for(uint i=0;i<BK;++i){
+            for(uint j=0;j<TM;++j){
+                reg_A[j]=shmemA[(threadRow*TM)*BK+j*BK+i];
             }
-            for(j=0;j<TN;++j){
-                reg_B[j]=shmemB[];
+            for(uint j=0;j<TN;++j){
+                reg_B[j]=shmemB[threadCol*TN+i*BN+j];//fhemtha
             }
             //2 loops since this is outer product
             //this is the heart of reducing the number of loads from SMEM ( which caused the MIO throttle)
