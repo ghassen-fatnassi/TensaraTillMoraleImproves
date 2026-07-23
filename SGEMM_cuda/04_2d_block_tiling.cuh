@@ -30,7 +30,6 @@ float reg_tile_result[TM][TN]={0.0};
 float reg_A[TM]={0.0};
 float reg_B[TN]={0.0};
 
-
 const uint cRow = blockIdx.y;
 const uint cCol = blockIdx.x;
 
@@ -49,10 +48,16 @@ C += cRow * BM * N + cCol * BN;
 __shared__ float shmemA[BM*BK];
 __shared__ float shmemB[BK*BN];//keep row-major
 
-
+//you always always have to think from threadIdx.x to the data and to the computation seperately, difference between heaven and hell in mind-mapping
 //these indices are the whole game , pay attention if you are reading my repo
+const uint in_rowA = threadIdx.x / BK;
+const uint in_colA = threadIdx.x % BK;
+const uint offsetA_row_wise = threads_per_block/BK;
 
-
+const uint in_rowB= threadIdx.x / BN;
+const uint in_colB= threadIdx.x % BN;
+const uint offsetB_row_wise= threads_per_block/BN;
+//it's very important to watch ur indices because it's what decides coalescing , u need to make surethat lockstep loading from warps are contiguous
 //loop over BK
 for (blk_idx=0; blk_idx<=(K/BK); blk_idx++){
     //even the shmem populating needs to happen in a loop
