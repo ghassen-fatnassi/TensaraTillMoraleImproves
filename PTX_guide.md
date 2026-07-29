@@ -1,9 +1,5 @@
 # Tutorial: Understanding GPU Assembly with PTX
 
-**Time Required:** 45-60 minutes
-**Difficulty:** Intermediate
-**Prerequisites:** Completed Tutorial 01 (Vector Addition), understanding of assembly language concepts helpful but not required
-
 By the end of this tutorial, you will understand PTX (Parallel Thread Execution), NVIDIA's virtual assembly language for GPUs. You'll learn how to read compiler-generated PTX, write inline PTX assembly for performance optimization, and understand the relationship between high-level CUDA code and what actually executes on the GPU.
 
 ## What is PTX and Why Should You Care?
@@ -523,10 +519,6 @@ Key PTX concepts include virtual registers, memory space qualifiers, predicated 
 Modern CUDA compilers generate excellent code, so inline PTX should be used sparingly and only after profiling. When used appropriately, PTX enables optimizations impossible to express in high-level code.
 
 The PTX ISA evolves with each GPU architecture, exposing new hardware capabilities. Understanding PTX provides insight into GPU architecture and helps you write better high-level CUDA code.
-
-## Next Steps
-
-Continue to **Tutorial 03: GPU Programming Methods** to explore different approaches to GPU programming including Thrust, Unified Memory, and Dynamic Parallelism. You'll learn when to use each technique and how to combine them effectively.
 
 ## Further Reading
 
