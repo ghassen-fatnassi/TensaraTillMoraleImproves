@@ -1,2 +1,3 @@
 SGEMM_CUDA/
 fp32_sgemm_amd/
+SGEMM_amd/
