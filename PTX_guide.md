@@ -526,3 +526,7 @@ The PTX ISA evolves with each GPU architecture, exposing new hardware capabiliti
 - [Inline PTX Assembly](https://docs.nvidia.com/cuda/inline-ptx-assembly/) - Official guide to inline PTX
 - [GPU Architecture Documentation](https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#compute-capabilities) - Hardware capabilities by generation
 - [CUDA Binary Utilities](https://docs.nvidia.com/cuda/cuda-binary-utilities/) - Tools for inspecting compiled code
+
+## NOTE
+THIS README SOURCE IS: https://github.com/eunomia-bpf/basic-cuda-tutorial/blob/main/02-ptx-assembly.md
+THEY ARE DOING GREAT WORK CHECK EM OUT
