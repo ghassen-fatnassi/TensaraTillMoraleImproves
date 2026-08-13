@@ -35,14 +35,24 @@ def split_fused_weights(w1: torch.Tensor, w2: torch.Tensor):
     w1: [E, 2*I, d]  ->  gate_proj [E, I, d], up_proj [E, I, d]
     w2: [E, d, I]    ->  down_proj [E, d, I]
     """
-    E, two_I, d = w1.shape
-    I = two_I // 2
-    gate_proj = w1[:, :I, :].contiguous()   # [E, I, d]
-    up_proj = w1[:, I:, :].contiguous()     # [E, I, d]
-    down_proj = w2.contiguous()             # [E, d, I]
-    return gate_proj, up_proj, down_proj
+    gate_proj,up_proj=w1.chunk(2,1)
+    return gate_proj.contiguous(),up_proj.contiguous(),w2.contiguous()
 
-
+def moe_fused_me(
+    x: torch.Tensor,              # [M, d]
+    gate_proj: torch.Tensor,      # [E, I, d]
+    up_proj: torch.Tensor,        # [E, I, d]
+    down_proj: torch.Tensor,      # [E, d, I]
+    topk_ids: torch.Tensor,       # [M, top_k]
+    topk_weights: torch.Tensor,   # [M, top_k]
+    scaling_factor: float = 1.0,
+) -> torch.Tensor:
+    #supposing all tokens are independant here (inference_prefill)
+    #=> we can group by experts
+    E,I,d=gate_proj.shape()
+    M,top_k=topk_ids.shape()
+    
+    pass
 def moe_unfused(
     x: torch.Tensor,              # [M, d]
     gate_proj: torch.Tensor,      # [E, I, d]
@@ -93,19 +103,17 @@ def moe_unfused(
 
 
 if __name__ == "__main__":
-    # Standalone check against the fused reference.
-    import torch as _t
     from moe_w8a8_reference import fused_moe_reference
 
-    _t.manual_seed(0)
-    M, d, I, E, top_k = 8, 256, 256, 3, 2
-    dev = "cuda" if _t.cuda.is_available() else "cpu"
+    torch.manual_seed(0)
+    M, d, I, E, top_k = 32, 256, 1024, 8, 3
+    dev = "cuda" if torch.cuda.is_available() else "cpu"
 
-    x = _t.randn(M, d, device=dev)
-    w1 = _t.randn(E, 2 * I, d, device=dev) * (d ** -0.5)
-    w2 = _t.randn(E, d, I, device=dev) * (I ** -0.5)
-    topk_ids = _t.randint(0, E, (M, top_k), device=dev)
-    topk_weights = _t.softmax(_t.randn(M, top_k, device=dev), dim=1)
+    x = torch.randn(M, d, device=dev)
+    w1 = torch.randn(E, 2 * I, d, device=dev) * (d ** -0.5)
+    w2 = torch.randn(E, d, I, device=dev) * (I ** -0.5)
+    topk_ids = torch.randint(0, E, (M, top_k), device=dev)
+    topk_weights = torch.softmax(torch.randn(M, top_k, device=dev), dim=1)
 
     gate_proj, up_proj, down_proj = split_fused_weights(w1, w2)
     a = fused_moe_reference(x, w1, w2, topk_ids, topk_weights)
